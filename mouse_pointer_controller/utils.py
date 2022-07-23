@@ -29,6 +29,8 @@ class Point:
 
 @dataclass
 class ImageDimension(Point):
+    """Image dimension x->width y->height"""
+
     @property
     def width(self):
         return self.x
@@ -39,11 +41,14 @@ class ImageDimension(Point):
 
     @classmethod
     def from_point(cls, point: Point) -> "ImageDimension":
+        """Builds an ImageDimension from a Point"""
         return ImageDimension(x=point.x, y=point.y)
 
 
 @dataclass
 class BoundingBox:
+    """A bounding box class"""
+
     top_left: Point
     bottom_right: Point
 
