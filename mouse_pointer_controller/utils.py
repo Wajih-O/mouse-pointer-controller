@@ -5,7 +5,7 @@ import numpy as np
 
 @dataclass
 class Point:
-    """Point class to represent a pixel coordinate/2D object dimension in pixel"""
+    """Point class to represent a pixel coordinate/2D object dimensions in pixel"""
 
     x: int
     y: int
@@ -38,7 +38,7 @@ class ImageDimension(Point):
         return self.y
 
     @classmethod
-    def from_point(cls, point:Point) -> "ImageDimension":
+    def from_point(cls, point: Point) -> "ImageDimension":
         return ImageDimension(x=point.x, y=point.y)
 
 
