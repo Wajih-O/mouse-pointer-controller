@@ -1,5 +1,7 @@
 from dataclasses import dataclass
 
+from typing import Optional
+
 import cv2
 
 import numpy as np
@@ -123,16 +125,25 @@ class RatioBoundingBox:
             ImageDimension(*bounding_box.top_left.as_array),
         )
 
-    def crop(self, image: np.ndarray) -> np.ndarray:
+    def crop(
+        self, image: np.ndarray, output_dimension: Optional[ImageDimension] = None
+    ) -> np.ndarray:
         """Crop image extracting the (concretized/projected) bounding box given the image dimension
         assumes image shape to be (Hight, Width, depth)
         """
+
+        # TODO:  project/crop back a RatioBoundingBox detection through a successive RatioBoundingBoxes
+        # (to handle) Original -> Face -> Eye, This is useful to recover as high resolution as we can for eyes landmarks
+        # from the original image
+
         image_dimension = ImageDimension(*image.shape[:2][::-1])
-        print(image_dimension)
         bbox = self.project(image_dimension)
-        return image[
+        crop_ = image[
             bbox.top_left.y : bbox.bottom_right.y, bbox.top_left.x : bbox.bottom_right.x
         ]
+        if output_dimension is not None:
+            return cv2.resize(crop_, (image_dimension.height, image_dimension.width))
+        return crop_
 
     def draw(self, image: np.ndarray, color=(255, 0, 0), thickness=2) -> np.ndarray:
         """Draw a (concretized/projected) bounding box on image (using its dimension)
