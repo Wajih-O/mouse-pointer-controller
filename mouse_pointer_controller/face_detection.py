@@ -6,17 +6,14 @@
  """
 
 import logging
-import os
-from typing import List, Optional, Tuple
-
-import cv2
+from typing import List
 
 import numpy as np
 
 from mouse_pointer_controller.single_image_openvino_model import (
     SingleImageOpenVinoModel,
 )
-from mouse_pointer_controller.utils import ImageDimension, RatioPoint
+from mouse_pointer_controller.utils import RatioDetection, RatioPoint
 
 LOGGER = logging.getLogger()
 
@@ -30,11 +27,10 @@ class FaceDetector(SingleImageOpenVinoModel):
 
     def extract_faces(
         self,
-        image,
-        output_dimension: Optional[ImageDimension] = None,
+        image: np.ndarray,
         detections=None,
         min_confidence: float = 0.95,
-    ) -> Tuple[List[np.ndarray], np.ndarray]:
+    ) -> List[RatioDetection]:
         """Extract faces
         :param image: model ready preprocessed image
         :param output_dimension: output dimension for each of the detected face
@@ -61,25 +57,15 @@ class FaceDetector(SingleImageOpenVinoModel):
             "detections (at confidence > %.2f): %d", min_confidence, filtered.shape[0]
         )
 
-        faces = []  # assuming
-        image_dimension = self.image_dimension
-        visu_image = image_.copy()
+        faces: List[RatioDetection] = []
+
         for _, _, confidence, start_x, start_y, end_x, end_y in filtered:
-            start = RatioPoint(start_x, start_y).project(image_dimension)
-            end = RatioPoint(end_x, end_y).project(image_dimension)
-
-            visu_image = cv2.rectangle(
-                visu_image, start.as_array, end.as_array, color=(255, 0, 0), thickness=2
+            faces.append(
+                RatioDetection(
+                    top_left=RatioPoint(start_x, start_y),
+                    bottom_right=RatioPoint(end_x, end_y),
+                    confidence=confidence,
+                )
             )
-            try:
-                # original size
-                LOGGER.debug("width: %d  height: %d", end.x - start.x, end.y - start.y)
-                face_crop = image_[start.y : end.y, start.x : end.x]
-                if output_dimension is not None:
-                    face_crop = cv2.resize(face_crop, output_dimension.as_array)
-                LOGGER.info("crop shape: %s", face_crop.shape)
-                faces.append(face_crop)
-            except Exception:
-                LOGGER.exception("error while extracting faces cropping image")
 
-        return faces, visu_image
+        return faces
