@@ -1,3 +1,11 @@
+"""
+ CV Utils: Point, ImageDimension, BoundingBox, RatioBoundingBox, ...
+
+ * @author Wajih Ouertani
+ * @email wajih.ouertani@gmail.com
+ """
+
+
 from dataclasses import dataclass
 
 from typing import Optional
