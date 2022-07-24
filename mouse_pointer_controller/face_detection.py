@@ -1,5 +1,5 @@
 """
- Face detector  class (OpenVino model wrapper)
+ Face detector class (OpenVino model wrapper)
 
  * @author Wajih Ouertani
  * @email wajih.ouertani@gmail.com
