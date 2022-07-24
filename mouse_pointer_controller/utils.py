@@ -1,5 +1,7 @@
 from dataclasses import dataclass
 
+import cv2
+
 import numpy as np
 
 
@@ -29,8 +31,6 @@ class Point:
 
 @dataclass
 class ImageDimension(Point):
-    """Image dimension x->width y->height"""
-
     @property
     def width(self):
         return self.x
@@ -41,14 +41,11 @@ class ImageDimension(Point):
 
     @classmethod
     def from_point(cls, point: Point) -> "ImageDimension":
-        """Builds an ImageDimension from a Point"""
         return ImageDimension(x=point.x, y=point.y)
 
 
 @dataclass
 class BoundingBox:
-    """A bounding box class"""
-
     top_left: Point
     bottom_right: Point
 
@@ -103,15 +100,60 @@ class RatioBoundingBox:
     top_left: RatioPoint
     bottom_right: RatioPoint
 
-    def crop(self, dimension: ImageDimension, offset: ImageDimension):
-        bounding_box = BoundingBox(
+    def project(self, dimension: ImageDimension) -> BoundingBox:
+        """Concretize/project a ratio bounding box to a bounding box
+        given an Image dimension
+        :param dimension: Image dimension
+
+        :return: concretized bounding box (pixel representation)
+        """
+        return BoundingBox(
             top_left=self.top_left.project(dimension),
             bottom_right=self.bottom_right.project(dimension),
-        ).translate(offset)
+        )
+
+    def project_with_offset(
+        self,
+        dimension: ImageDimension,
+        offset: ImageDimension = ImageDimension.from_point(Point(0, 0)),
+    ):
+        bounding_box = self.project(dimension=dimension).translate(offset)
         return (
             bounding_box,
             ImageDimension(*bounding_box.top_left.as_array),
         )
+
+    def crop(self, image: np.ndarray) -> np.ndarray:
+        """Crop image extracting the (concretized/projected) bounding box given the image dimension
+        assumes image shape to be (Hight, Width, depth)
+        """
+        image_dimension = ImageDimension(*image.shape[:2][::-1])
+        print(image_dimension)
+        bbox = self.project(image_dimension)
+        return image[
+            bbox.top_left.y : bbox.bottom_right.y, bbox.top_left.x : bbox.bottom_right.x
+        ]
+
+    def draw(self, image: np.ndarray, color=(255, 0, 0), thickness=2) -> np.ndarray:
+        """Draw a (concretized/projected) bounding box on image (using its dimension)
+        assumes image shape to be (Hight, Width, depth)
+        """
+        image_dimension = ImageDimension(*image.shape[:2][::-1])
+        bbox = self.project(image_dimension)
+        return cv2.rectangle(
+            image.copy(),
+            bbox.top_left.as_array,
+            bbox.bottom_right.as_array,
+            color=color,
+            thickness=thickness,
+        )
+
+
+@dataclass
+class RatioDetection(RatioBoundingBox):
+    """A ratio detection augmenting the RatioBoundingBox with a class an confidence"""
+
+    confidence: float
 
 
 @dataclass
