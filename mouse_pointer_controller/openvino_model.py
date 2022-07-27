@@ -3,6 +3,8 @@ from dataclasses import dataclass
 from time import time
 from typing import Optional, Tuple
 
+import cv2
+
 import numpy as np
 
 from openvino.inference_engine import IECore
@@ -23,6 +25,20 @@ class ModelDefinition(BaseModel):
         return ModelDefinition(
             structure=f"{path_prefix}.xml", weights=f"{path_prefix}.bin"
         )
+
+
+def preprocess_image_input(image: np.ndarray, output_shape: np.ndarray) -> np.ndarray:
+    """Preprocess image to fit expected input shape
+    :param image: np.ndarray (height, width, depth)
+    :param output_shape: (batch=1, depth, output_height, output_width)
+    :return: (OpenVinoModel) inferable image as np.ndarray
+    """
+    height, width = output_shape[-2:]
+    return (
+        cv2.resize(image, (width, height))
+        .transpose((2, 0, 1))
+        .reshape(1, 3, height, width)
+    )
 
 
 class OpenVinoModel(BaseModel):

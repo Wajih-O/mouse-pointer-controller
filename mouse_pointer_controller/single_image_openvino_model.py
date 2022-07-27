@@ -12,7 +12,10 @@ from typing import Optional
 import cv2
 
 import numpy as np
-from mouse_pointer_controller.openvino_model import OpenVinoModel
+from mouse_pointer_controller.openvino_model import (
+    OpenVinoModel,
+    preprocess_image_input,
+)
 from mouse_pointer_controller.utils import ImageDimension
 
 LOGGER = logging.getLogger()
@@ -30,12 +33,9 @@ class SingleImageOpenVinoModel(OpenVinoModel):
         :param image: np.ndarray
         :return: inferable image as np.ndarray
         """
-        height, width = self.expected_input_shape[-2:]
-        return (
-            cv2.resize(image, (width, height))
-            .transpose((2, 0, 1))
-            .reshape(1, 3, height, width)
-        )
+        if image.shape == self.expected_input_shape:
+            return image.copy()
+        return preprocess_image_input(image, self.expected_input_shape)
 
     def predict(self, image):
         """
