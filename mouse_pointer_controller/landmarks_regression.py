@@ -9,12 +9,12 @@ from dataclasses import dataclass
 from typing import Dict, List
 
 import numpy as np
+from pydantic import BaseModel
 
 from mouse_pointer_controller.single_image_openvino_model import (
     SingleImageOpenVinoModel,
 )
 from mouse_pointer_controller.utils import Crop, RatioBoundingBox, RatioPoint
-from pydantic import BaseModel
 
 
 @dataclass
@@ -64,7 +64,7 @@ class LandmarksRegression(SingleImageOpenVinoModel):
         landmarks = self.predict(to_infer)
         return landmarks
 
-    def extract_eyes(self, image) -> Dict:
+    def extract_eyes(self, image) -> EyesLandmarks:
         """Extract eyes as landmarks from a given face image
         :param image: face image
         :return: left right
