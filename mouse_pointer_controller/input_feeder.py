@@ -35,10 +35,11 @@ class InputFeeder:
         else:
             self.capture = cv2.imread(self.input_file)
 
+    @property
     def dimension(self) -> ImageDimension:
         return ImageDimension(
-            width=self.capture.get(cv2.CAP_PROP_FRAME_WIDTH),
-            height=self.capture.get(cv2.CAP_PROP_FRAME_HEIGHT),
+            x=self.capture.get(cv2.CAP_PROP_FRAME_WIDTH),
+            y=self.capture.get(cv2.CAP_PROP_FRAME_HEIGHT),
         )
 
     def next_batch(self, sampling_rate: float = 0.1, limit: Optional[int] = None):
