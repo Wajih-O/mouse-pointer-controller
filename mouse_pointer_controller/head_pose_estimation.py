@@ -10,6 +10,7 @@ from operator import itemgetter
 from typing import Dict
 
 import numpy as np
+
 from mouse_pointer_controller.single_image_openvino_model import (
     SingleImageOpenVinoModel,
 )
