@@ -12,6 +12,7 @@ from typing import Optional
 import cv2
 
 import numpy as np
+
 from mouse_pointer_controller.openvino_model import (
     OpenVinoModel,
     preprocess_image_input,
