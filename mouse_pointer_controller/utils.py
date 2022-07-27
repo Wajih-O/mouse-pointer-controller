@@ -53,6 +53,9 @@ class ImageDimension(Point):
     def from_point(cls, point: Point) -> "ImageDimension":
         return ImageDimension(x=point.x, y=point.y)
 
+    def scale(self, factor: float) -> "ImageDimension":
+        return ImageDimension(x=int(self.width * factor), y=int(self.height * factor))
+
 
 @dataclass
 class BoundingBox:
