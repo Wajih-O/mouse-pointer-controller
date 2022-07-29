@@ -1,7 +1,8 @@
 import logging
 from dataclasses import dataclass
-from time import time
-from typing import Optional, Tuple
+
+from time import monotonic, time
+from typing import Dict, Optional, Tuple
 
 import cv2
 
@@ -50,6 +51,7 @@ class OpenVinoModel(BaseModel):
     network: Optional[ExecutableNetwork] = None
     input_layer_name: Optional[str] = None
     # extensions = None (if the model requires plugin) # todo clean-up
+    loading_time: Optional[float] = None
 
     class Config:
         arbitrary_types_allowed = True
@@ -71,8 +73,12 @@ class OpenVinoModel(BaseModel):
         """Check the model is loaded (via the network expected class)"""
         return self.network.__class__.__name__ == "ExecutableNetwork"
 
+    def loading_summary(self) -> Dict:
+        return {"model_name": self.model_name, "loading_time": self.loading_time}
+
     def load_model(self):
         """Load the model"""
+        start = monotonic()
         self.network, self.input_layer_name = load_with_IECore(
             ModelDefinition.from_path(
                 os.path.join(self.model_directory, self.model_name)
@@ -80,6 +86,7 @@ class OpenVinoModel(BaseModel):
             device_name=self.device,
             num_requests=1,
         )
+        self.loading_time = monotonic() - start
 
 
 def load_with_IECore(
