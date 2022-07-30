@@ -35,6 +35,10 @@ class GazeEstimation:
         x, y, z = gaze_vector
         return GazeEstimation(x=x, y=y, z=z)
 
+    @property
+    def as_array(self):
+        return np.array([self.x, self.y, self.z])
+
 
 @dataclass
 class GazeEstimationResult:
@@ -70,11 +74,14 @@ class GazeEstimator(OpenVinoModel):
             }
         )
 
-    def estimate_gaze(self, face_image: np.ndarray):
+    def estimate_gaze(self, face_image: np.ndarray) -> GazeEstimationResult:
         """Estimate gaze from a face image using the landmarks regression
         model for eye detection and the head pose estimator
 
-        :param face_image: face image as np.ndarray"""
+        :param face_image: face image as np.ndarray
+
+        :return : gaze estimation result as GazeEstimationResult
+        """
 
         if not self.check:
             # load model
@@ -101,5 +108,9 @@ class GazeEstimator(OpenVinoModel):
             head_pose=head_pose,
             left_eye_image=left_eye_crop,
             right_eye_image=right_eye_crop,
+        )["gaze_vector"][0]
+        return GazeEstimationResult(
+            head_pose=head_pose,
+            eyes_landmarks=eyes_landmarks,
+            gaze=GazeEstimation.from_array(gaze_vector),
         )
-        return gaze_vector
