@@ -2,6 +2,7 @@
 import logging
 import os
 from dataclasses import dataclass
+from tkinter import Image
 from typing import List
 
 import cv2
@@ -10,8 +11,10 @@ import numpy as np
 import pyautogui
 from commandr import command, Run
 
+from PIL import ImageGrab
+
 from mouse_pointer_controller.face_detection import FaceDetector
-from mouse_pointer_controller.gaze_estimation import GazeEstimator
+from mouse_pointer_controller.gaze_estimation import GazeEstimationResult, GazeEstimator
 from mouse_pointer_controller.head_pose_estimation import HeadPoseEstimator
 
 from mouse_pointer_controller.input_feeder import InputFeeder
@@ -21,6 +24,7 @@ from mouse_pointer_controller.utils import (
     ImageDimension,
     Point,
     RatioBoundingBox,
+    RatioPoint,
 )
 
 from mouse_pointer_controller.video_utils import codec
@@ -101,6 +105,38 @@ class HighPrecisionMouseController(MouseController):
     speed: float = 0.01
 
 
+def screen_crop_with_pointer(screen_crop: BoundingBox, marker_color=(255, 0, 0)):
+    """Extract crop with cursor"""
+    cursor_position = pyautogui.position()
+    output_image = np.array(
+        ImageGrab.grab(
+            bbox=(
+                screen_crop.top_left.x,
+                screen_crop.top_left.y,
+                screen_crop.bottom_right.x,
+                screen_crop.bottom_right.y,
+            )
+        )
+    )
+    if (cursor_position.x > screen_crop.top_left.x) and (
+        cursor_position.x < screen_crop.bottom_right.x
+    ):
+        if (cursor_position.y > screen_crop.top_left.y) and (
+            cursor_position.y < screen_crop.bottom_right.y
+        ):
+            cv2.drawMarker(
+                output_image,
+                position=(
+                    cursor_position.x - screen_crop.top_left.x,
+                    cursor_position.y - screen_crop.top_left.y,
+                ),
+                color=marker_color,
+                thickness=4,
+            )
+
+    return output_image
+
+
 @command
 def start(
     models_root_dir="./models/intel",
@@ -108,7 +144,8 @@ def start(
     input_file="./tests/data/demo.mp4",
     output_video_file="./output.mp4",
     gaze_estimation_data_output="./gaze_estimation_data.csv",
-    model_precision="FP32",
+    model_precision="FP16",
+    sample_size=None,
 ):
     """A main gaze based mouse pointer controller function:
     1 - Build and compose with the needed models
@@ -161,7 +198,6 @@ def start(
 
     input_dimension = feed.dimension
     output_dimension = input_dimension.scale(0.3)
-    print(tuple(face_detector.image_dimension.as_array))
 
     video_writer = cv2.VideoWriter(
         output_video_file,
@@ -170,13 +206,30 @@ def start(
         (output_dimension.width, output_dimension.height),
     )
 
-    sample_size = None
+    # Desktop cropping (demo video output generation)
+    screen_ratio_crop = RatioBoundingBox(
+        top_left=RatioPoint(0, 0), bottom_right=RatioPoint(0.8, 0.8)
+    )
+
+    screen_dimension = ImageDimension.from_pyautogui_size(pyautogui.size())
+
+    screen_crop: BoundingBox = screen_ratio_crop.project(screen_dimension)
+    screen_crop_output_dimension = screen_crop.dimension.scale(0.5)
+    print(screen_crop, screen_crop.dimension)
+
+    desktop_crop_writer = cv2.VideoWriter(
+        "demo.mp4",
+        codec(),
+        30,
+        screen_crop_output_dimension.as_array,  # screen_crop.dimension.as_array,
+    )
 
     pointer_controller = HighPrecisionMouseController()
     pointer_controller.center()
     cv2.waitKey()
 
     main_window_name: str = "video mouse controller"
+    test_window_name: str = "screen crop"
     margin = 200
     cv2.namedWindow(main_window_name)
     cv2.moveWindow(main_window_name, margin + 100, margin + 100)
@@ -194,16 +247,16 @@ def start(
             crops.append(selected_face)
             face_crop = selected_face.crop(image)
 
-            eyes_landmarks = landmarks_regressor.extract_eyes(face_crop)
-
             try:
                 # Gaze estimation
-                gaze_vector = gaze_estimator.estimate_gaze(face_crop)["gaze_vector"][0]
-                gaze_data.append(gaze_vector)
+                gaze_estimation: GazeEstimationResult = gaze_estimator.estimate_gaze(
+                    face_crop
+                )  # ["gaze_vector"][0]
+                gaze_data.append(gaze_estimation.gaze.as_array)
 
-                x, y, _ = gaze_vector
+                x, y, _ = gaze_estimation.gaze.as_array
                 pointer_controller.gaze_move(x, y, margin=margin)
-
+                eyes_landmarks = gaze_estimation.eyes_landmarks
                 output_frame = image.copy()
                 for eye_landmark in [eyes_landmarks.left, eyes_landmarks.right]:
                     bbox = BoundingBox(
@@ -223,7 +276,7 @@ def start(
                         thickness=1,
                     )
 
-                # draw the most confident face (as we expect one face in the application)
+                # Draw the most confident face (as we expect one face in the application)
                 output_frame = cv2.cvtColor(
                     cv2.resize(
                         selected_face.draw(output_frame),
@@ -235,7 +288,20 @@ def start(
                     main_window_name,
                     output_frame,
                 )
+
                 cv2.waitKey(1)
+
+                # Screen capture  with cursor position drawing (as it is not captured with ImageGrab)
+                desktop_crop = cv2.cvtColor(
+                    cv2.resize(
+                        screen_crop_with_pointer(screen_crop=screen_crop),
+                        screen_crop_output_dimension.as_array,
+                    ),
+                    cv2.COLOR_RGB2BGR,
+                )
+                # cv2.imshow(test_window_name, desktop_crop)
+                # cv2.waitKey(1)
+                desktop_crop_writer.write(desktop_crop)
                 video_writer.write(output_frame)
 
             except pyautogui.FailSafeException as fse:
