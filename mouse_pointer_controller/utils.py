@@ -13,6 +13,7 @@ from typing import Optional
 import cv2
 
 import numpy as np
+from pyautogui import Size
 
 
 @dataclass
@@ -52,6 +53,10 @@ class ImageDimension(Point):
     @classmethod
     def from_point(cls, point: Point) -> "ImageDimension":
         return ImageDimension(x=point.x, y=point.y)
+
+    @classmethod
+    def from_pyautogui_size(cls, size: Size) -> "ImageDimension":
+        return ImageDimension(x=size.width, y=size.height)
 
     def scale(self, factor: float) -> "ImageDimension":
         return ImageDimension(x=int(self.width * factor), y=int(self.height * factor))
