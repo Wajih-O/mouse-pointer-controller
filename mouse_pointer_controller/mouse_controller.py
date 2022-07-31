@@ -1,6 +1,15 @@
 #!/usr/bin/env python
+"""
+ Main computer pointer (mouse) controller + models output visu./perf. data utils
+
+ * @author Wajih Ouertani
+ * @email wajih.ouertani@gmail.com
+
+ """
+import json
 import logging
 import os
+from collections import defaultdict
 from dataclasses import dataclass
 from tkinter import Image
 from typing import List
@@ -12,6 +21,7 @@ import pyautogui
 from commandr import command, Run
 
 from PIL import ImageGrab
+from traitlets import default
 
 from mouse_pointer_controller.face_detection import FaceDetector
 from mouse_pointer_controller.gaze_estimation import GazeEstimationResult, GazeEstimator
@@ -19,6 +29,7 @@ from mouse_pointer_controller.head_pose_estimation import HeadPoseEstimator
 
 from mouse_pointer_controller.input_feeder import InputFeeder
 from mouse_pointer_controller.landmarks_regression import LandmarksRegression
+from mouse_pointer_controller.openvino_model import OpenVinoModel
 from mouse_pointer_controller.utils import (
     BoundingBox,
     ImageDimension,
@@ -137,15 +148,23 @@ def screen_crop_with_pointer(screen_crop: BoundingBox, marker_color=(255, 0, 0))
     return output_image
 
 
+def ensure_output_directory(output_directory: str):
+    """Ensure output directory exists (todo: try to create it)"""
+    if os.path.exists(output_directory):
+        if not os.path.isdir(output_directory):
+            raise Exception(f"{output_directory} is not a directory")
+    else:
+        os.makedirs(output_directory)
+
+
 @command
 def start(
     models_root_dir="./models/intel",
     input_type="video",
     input_file="./tests/data/demo.mp4",
-    output_video_file="./output.mp4",
-    gaze_estimation_data_output="./gaze_estimation_data.csv",
     model_precision="FP16",
     sample_size=None,
+    output_directory="./output/",
 ):
     """A main gaze based mouse pointer controller function:
     1 - Build and compose with the needed models
@@ -153,45 +172,59 @@ def start(
     3 - Controls the mouse using the x,y from the gaze estimation and a MouseController + output and store the detection
     """
 
+    ensure_output_directory(output_directory=output_directory)
+    output_video_file = os.path.join(output_directory, "output.mp4")
+    screen_capture_video_file = os.path.join(output_directory, "screen_capture.mp4")
     # Setup models:
-    loading_summary = []
+
+    loading_summary = defaultdict(lambda x: [])
     face_detector = FaceDetector(
         model_directory=os.path.join(
             models_root_dir, "face-detection-adas-0001", model_precision
         )
     )
     face_detector.load_model()
-    loading_summary.append(face_detector.loading_summary())
 
-    # Build/Prepare models
-    landmarks_regressor = LandmarksRegression(
-        model_directory=os.path.join(
-            models_root_dir, "landmarks-regression-retail-0009", model_precision
-        )
-    )
-    # landmarks_regressor.load_model()
-    # loading_summary.append(landmarks_regressor.loading_summary())
-
-    head_pose_estimator = HeadPoseEstimator(
-        model_directory=os.path.join(
-            models_root_dir, "head-pose-estimation-adas-0001", model_precision
-        )
-    )
-    # head_pose_estimator.load_model()
-    # loading_summary.append(head_pose_estimator.loading_summary())
+    # Build Gaze estimator
 
     gaze_estimator = GazeEstimator(
         model_directory=os.path.join(
             models_root_dir, "gaze-estimation-adas-0002", model_precision
         ),
-        landmarks_regressor=landmarks_regressor,
-        head_pose_estimator=head_pose_estimator,
+        landmarks_regressor=LandmarksRegression(
+            model_directory=os.path.join(
+                models_root_dir, "landmarks-regression-retail-0009", model_precision
+            )
+        ),
+        head_pose_estimator=HeadPoseEstimator(
+            model_directory=os.path.join(
+                models_root_dir, "head-pose-estimation-adas-0001", model_precision
+            )
+        ),
     )
-    gaze_estimator.load_model()
-    loading_summary.append(gaze_estimator.loading_summary())
 
-    print(loading_summary)
-    # setup input feeder
+    gaze_estimator.landmarks_regressor.load_model()
+    gaze_estimator.head_pose_estimator.load_model()
+    gaze_estimator.load_model()
+
+    models: List[OpenVinoModel] = [
+        face_detector,
+        gaze_estimator.head_pose_estimator,
+        gaze_estimator.landmarks_regressor,
+        gaze_estimator,
+    ]
+
+    # loading summary
+    loading_summary = defaultdict(lambda: [])
+    for model in models:
+        loading_summary[model.loading_summary["model_name"]] += [
+            model.loading_summary["loading_time"]
+        ]
+    summary = {"precision": model_precision, "loading_time": loading_summary}
+    with open(
+        os.path.join(output_directory, f"loading_summary_{model_precision}.json"), "w"
+    ) as loading_summary_output:
+        json.dump(summary, loading_summary_output)
 
     feed: InputFeeder = InputFeeder(input_type=input_type, input_file=input_file)
     feed.load_data()
@@ -217,8 +250,8 @@ def start(
     screen_crop_output_dimension = screen_crop.dimension.scale(0.5)
     print(screen_crop, screen_crop.dimension)
 
-    desktop_crop_writer = cv2.VideoWriter(
-        "demo.mp4",
+    screen_capture_writer = cv2.VideoWriter(
+        screen_capture_video_file,
         codec(),
         30,
         screen_crop_output_dimension.as_array,  # screen_crop.dimension.as_array,
@@ -251,7 +284,7 @@ def start(
                 # Gaze estimation
                 gaze_estimation: GazeEstimationResult = gaze_estimator.estimate_gaze(
                     face_crop
-                )  # ["gaze_vector"][0]
+                )
                 gaze_data.append(gaze_estimation.gaze.as_array)
 
                 x, y, _ = gaze_estimation.gaze.as_array
@@ -301,7 +334,8 @@ def start(
                 )
                 # cv2.imshow(test_window_name, desktop_crop)
                 # cv2.waitKey(1)
-                desktop_crop_writer.write(desktop_crop)
+
+                screen_capture_writer.write(desktop_crop)
                 video_writer.write(output_frame)
 
             except pyautogui.FailSafeException as fse:
