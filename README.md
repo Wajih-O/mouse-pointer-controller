@@ -48,6 +48,15 @@ A main gaze based mouse pointer controller function:
     2 - Extract face, eye landmark, head position -> then estimate gaze
     3 - Controls the mouse using the x,y from the gaze estimation and a MouseController + output and store the detection
 
+
+    :param models_root_dir : root directory for the (xml/bin) models
+    :param input_type: input type, supports: "video" or "cam"
+    :param input_file: data source when the type is set to video
+    :param model_precision: model precision (default FP16)
+    :param sample_size: to limit the frames number to consume from the input source
+    :param output_directory: output directory for the generated artifacts control video capture and benchmarking data
+
+
 ----------------------------------------
 
 Usage: mouse_controller.py start [options]
@@ -70,7 +79,6 @@ Options:
                         [default: None]
   -o OUTPUT_DIRECTORY, --output-directory=OUTPUT_DIRECTORY
                         [default: "./output/"]
-
 ```
 
 ### Download models definition (XML, BIN)
