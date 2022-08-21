@@ -175,6 +175,11 @@ class RatioBoundingBox:
             thickness=thickness,
         )
 
+    @property
+    def size(self):
+        """Bounding box size"""
+        return np.prod(self.bottom_right.as_array - self.top_left.as_array)
+
 
 @dataclass
 class RatioDetection(RatioBoundingBox):
