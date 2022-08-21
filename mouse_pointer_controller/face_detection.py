@@ -68,4 +68,6 @@ class FaceDetector(SingleImageOpenVinoModel):
                 )
             )
 
-        return faces
+        return sorted(
+            faces, key=lambda ratio_detection: ratio_detection.size, reverse=True
+        )
