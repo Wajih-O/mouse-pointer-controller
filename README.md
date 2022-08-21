@@ -16,7 +16,7 @@ pip install .
 sudo apt-get install python3-tk python3-dev
 ```
 
-### Components, scripts and main program
+### Components, scripts, and the main program
 
 The project provides `mouse_pointer_controller` as a library of utils (bounding-box, cropping, ... ) and OpenVino model wrappers:
 `FaceDetector`, `HeadPoseEstimator`, `LandmarksRegression`, `GazeEstimator`
@@ -36,7 +36,7 @@ from mouse_pointer_controller.utils import (
 
 ```
 
-It provides also `mouse_controller.py` as a runnable command/script (already in path after installation). To show the main script help `mouse_controller.py -h`
+It provides also `mouse_controller.py` as a runnable command/script (already in the path after installation). To show the main script help `mouse_controller.py -h`
 where `mouse_controller.py start -h` shows the main command `start` help:
 
 ```text
@@ -98,7 +98,7 @@ mouse_controller.py start --model_precision="FP16-INT8"
 ```
 
 <div>
-<video controls width="500" src="output/screen_capture.mp4" muted="true">
+<video controls width="500" src="screen_capture.mp4" muted="true">
 </video>
 </div>
 
@@ -116,7 +116,7 @@ We report below model loading time, and model inference time using (intel i9 990
 
 ### Perf./inference time
 
-For each of the model, we report the average over inference time overall demo video frames.
+For each of the models, we report the average over inference time overall demo video frames.
 
 |           |   face-detection-adas-0001 |   head-pose-estimation-adas-0001 |   landmarks-regression-retail-0009 |
 |:----------|---------------------------:|---------------------------------:|-----------------------------------:|
@@ -137,3 +137,7 @@ the best available face detection. As it will not solve the problem of numerous 
 ## Generic pipeline inference
 
 The pipeline inference is generic accepting both webcam and video
+
+
+
+
