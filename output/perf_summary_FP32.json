@@ -1,0 +1,1 @@
+{"precision": "FP32", "average_prediction_time": {"face-detection-adas-0001": 0.010856744107752662, "head-pose-estimation-adas-0001": 0.0010213010168488342, "landmarks-regression-retail-0009": 0.000357544745646133, "gaze-estimation-adas-0002": 0.0010531599997440195}}

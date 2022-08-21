@@ -1,0 +1,1 @@
+{"precision": "FP16", "loading_time": {"face-detection-adas-0001": 0.12320000000181608, "head-pose-estimation-adas-0001": 0.0338422999921022, "landmarks-regression-retail-0009": 0.018957600012072362, "gaze-estimation-adas-0002": 0.04122440000355709}}

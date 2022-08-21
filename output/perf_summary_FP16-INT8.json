@@ -1,0 +1,1 @@
+{"precision": "FP16-INT8", "average_prediction_time": {"face-detection-adas-0001": 0.007948298990116565, "head-pose-estimation-adas-0001": 0.0007470547944113567, "landmarks-regression-retail-0009": 0.00033638732879995114, "gaze-estimation-adas-0002": 0.0007063376712086547}}
