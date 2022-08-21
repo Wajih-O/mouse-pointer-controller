@@ -4,9 +4,9 @@ GazeEstimation class (OpenVino model wrapper)
  * @author Wajih Ouertani
  * @email wajih.ouertani@gmail.com
  """
-
 from dataclasses import dataclass
-from operator import le
+
+from typing import List
 
 import numpy as np
 
@@ -19,6 +19,8 @@ from mouse_pointer_controller.openvino_model import (
     OpenVinoModel,
     preprocess_image_input,
 )
+
+from mouse_pointer_controller.single_image_openvino_model import timing
 
 
 @dataclass
@@ -58,6 +60,9 @@ class GazeEstimator(OpenVinoModel):
     landmarks_regressor: LandmarksRegression
     head_pose_estimator: HeadPoseEstimator
 
+    prediction_time: List[float] = []
+
+    @timing
     def infer(
         self,
         head_pose: HeadPose,

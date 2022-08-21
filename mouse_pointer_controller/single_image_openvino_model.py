@@ -7,9 +7,9 @@
  """
 
 import logging
-from typing import Optional
 
-import cv2
+from time import monotonic
+from typing import Callable, List, Optional
 
 import numpy as np
 
@@ -22,8 +22,23 @@ from mouse_pointer_controller.utils import ImageDimension
 LOGGER = logging.getLogger()
 
 
+def timing(to_time):
+    """timing decorator"""
+
+    def wrapper(*args, **kwargs):
+        start = monotonic()
+        res = to_time(*args, **kwargs)
+        time = monotonic() - start
+        args[0].prediction_time.append(time)
+        return res
+
+    return wrapper
+
+
 class SingleImageOpenVinoModel(OpenVinoModel):
     """Single image input OpenVino model"""
+
+    prediction_time: List[float] = []
 
     @property
     def image_dimension(self) -> Optional[np.ndarray]:
@@ -38,6 +53,7 @@ class SingleImageOpenVinoModel(OpenVinoModel):
             return image.copy()
         return preprocess_image_input(image, self.expected_input_shape)
 
+    @timing
     def predict(self, image):
         """
         Predict image

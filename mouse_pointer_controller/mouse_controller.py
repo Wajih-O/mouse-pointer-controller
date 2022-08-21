@@ -11,7 +11,7 @@ import logging
 import os
 from collections import defaultdict
 from dataclasses import dataclass
-from tkinter import Image
+
 from typing import List
 
 import cv2
@@ -21,7 +21,6 @@ import pyautogui
 from commandr import command, Run
 
 from PIL import ImageGrab
-from traitlets import default
 
 from mouse_pointer_controller.face_detection import FaceDetector
 from mouse_pointer_controller.gaze_estimation import GazeEstimationResult, GazeEstimator
@@ -170,6 +169,15 @@ def start(
     1 - Build and compose with the needed models
     2 - Extract face, eye landmark, head position -> then estimate gaze
     3 - Controls the mouse using the x,y from the gaze estimation and a MouseController + output and store the detection
+
+
+    :param models_root_dir : root directory for the (xml/bin) models
+    :param input_type: input type, supports: "video" or "cam"
+    :param input_file: data source when the type is set to video
+    :param model_precision: model precision (default FP16)
+    :param sample_size: to limit the frames number to consume from the input source
+    :param output_directory: output directory for the generated artifacts control video capture and benchmarking data
+
     """
 
     ensure_output_directory(output_directory=output_directory)
@@ -217,14 +225,16 @@ def start(
     # loading summary
     loading_summary = defaultdict(lambda: [])
     for model in models:
-        loading_summary[model.loading_summary["model_name"]] += [
-            model.loading_summary["loading_time"]
+        loading_summary[model.loading_summary["model_name"]] = model.loading_summary[
+            "loading_time"
         ]
     summary = {"precision": model_precision, "loading_time": loading_summary}
     with open(
         os.path.join(output_directory, f"loading_summary_{model_precision}.json"), "w"
     ) as loading_summary_output:
         json.dump(summary, loading_summary_output)
+
+    print(summary)
 
     feed: InputFeeder = InputFeeder(input_type=input_type, input_file=input_file)
     feed.load_data()
@@ -241,7 +251,7 @@ def start(
 
     # Desktop cropping (demo video output generation)
     screen_ratio_crop = RatioBoundingBox(
-        top_left=RatioPoint(0, 0), bottom_right=RatioPoint(0.8, 0.8)
+        top_left=RatioPoint(0.1, 0.1), bottom_right=RatioPoint(0.9, 0.9)
     )
 
     screen_dimension = ImageDimension.from_pyautogui_size(pyautogui.size())
@@ -262,7 +272,7 @@ def start(
     cv2.waitKey()
 
     main_window_name: str = "video mouse controller"
-    test_window_name: str = "screen crop"
+    # test_window_name: str = "screen crop"
     margin = 200
     cv2.namedWindow(main_window_name)
     cv2.moveWindow(main_window_name, margin + 100, margin + 100)
@@ -343,6 +353,20 @@ def start(
 
     video_writer.release()
     feed.close()
+
+    # saving perf. statistics/summary
+    perf_stats = {"precision": model_precision, "average_prediction_time": {}}
+    for model in models:
+        if model.prediction_time:
+            perf_stats["average_prediction_time"][model.model_name] = np.mean(
+                model.prediction_time
+            )
+
+    print(perf_stats)
+    with open(
+        os.path.join(output_directory, f"perf_summary_{model_precision}.json"), "w"
+    ) as perf_output:
+        json.dump(perf_stats, perf_output)
 
 
 if __name__ == "__main__":
