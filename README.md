@@ -98,7 +98,7 @@ mouse_controller.py start --model_precision="FP16-INT8"
 ```
 
 <div>
-<video controls width="500" src=""  muted="true">
+<video controls width="500" src="./output/screen_capture_h265.mp4"  muted="true">
 </video>
 </div>
 
