@@ -104,7 +104,7 @@ mouse_controller.py start --model_precision="FP16-INT8"
 
 ## Benchmark
 
-We report below model loading time, model inference time using (intel i9 9900k).
+We report below model loading time, and model inference time using (intel i9 9900k).
 
 ### Loading time
 
@@ -116,7 +116,7 @@ We report below model loading time, model inference time using (intel i9 9900k).
 
 ### Perf./inference time
 
-For each of the model we report the average over inference time over all demo video frames.
+For each of the model, we report the average over inference time overall demo video frames.
 
 |           |   face-detection-adas-0001 |   head-pose-estimation-adas-0001 |   landmarks-regression-retail-0009 |
 |:----------|---------------------------:|---------------------------------:|-----------------------------------:|
@@ -131,8 +131,8 @@ We remark a quasi-consistent increase in time perf. (a lower inference time) goi
 
 ## Multiple face detection
 
-In case of a multiple faces detection we use the confidence to sort and select
-the best available face detection. As it will not solve the problem of multiple confident face detection, for a pointer controller application in case of multiple detection the size of the face (bounding-box) is a good feature. Assuming the operator should be at a the closest distance from the screen expectedly will occupy the biggest bounding box.
+In the case of multiple faces detection, we use the confidence to sort and select
+the best available face detection. As it will not solve the problem of numerous confident face detection, for a pointer controller application in case of multiple detections the size of the face (bounding-box) is a good feature. Assuming the operator should be at the closest distance from the screen expectedly will occupy the biggest bounding box.
 
 ## Generic pipeline inference
 
