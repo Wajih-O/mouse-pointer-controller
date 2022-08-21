@@ -97,6 +97,8 @@ for a specific model precision (ex: FP16-INT8):
 mouse_controller.py start --model_precision="FP16-INT8"
 ```
 
+A video capture of the controller in action is also attached in the output directory: `./output/screen_capture.mp4`
+
 <div>
 <video controls width="500" src="./output/screen_capture_h265.mp4"  muted="true">
 </video>
@@ -133,11 +135,8 @@ We remark a quasi-consistent decrease in inference time (faster inference), goin
 ## Multiple face detection
 
 In the case of multiple faces detection, we use the confidence to sort and select
-the best available face detection. As it will not solve the problem of numerous confident face detection, for a pointer controller application in case of multiple detections the size of the face (bounding-box) is a good feature. Assuming the operator should be at the closest distance from the screen expectedly will occupy the biggest bounding box.
+the best available face detection. As it will not solve the problem of numerous confident face detection, for a pointer controller application in case of multiple detections the size of the face (bounding-box) is a good feature. Assuming the operator should be at the closest distance from the screen expectedly will occupy the biggest bounding box. Also for stability we can track the face bounding box keeping the closest to a first detection using the Jaccard Index.
 
 ## Generic pipeline inference
 
 The pipeline inference is generic accepting both webcam and video
-
-
-
