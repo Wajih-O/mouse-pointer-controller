@@ -98,7 +98,7 @@ mouse_controller.py start --model_precision="FP16-INT8"
 ```
 
 <div>
-<video controls width="500" src="screen_capture.mp4" muted="true">
+<video controls width="500" src=""  muted="true">
 </video>
 </div>
 
@@ -137,7 +137,6 @@ the best available face detection. As it will not solve the problem of numerous 
 ## Generic pipeline inference
 
 The pipeline inference is generic accepting both webcam and video
-
 
 
 
