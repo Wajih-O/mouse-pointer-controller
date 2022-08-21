@@ -110,23 +110,24 @@ We report below model loading time, and model inference time using (intel i9 990
 
 |           |   face-detection-adas-0001 |   head-pose-estimation-adas-0001 |   landmarks-regression-retail-0009 |   gaze-estimation-adas-0002 |
 |:----------|---------------------------:|---------------------------------:|-----------------------------------:|----------------------------:|
-| FP16-INT8 |                   0.191008 |                        0.0437531 |                          0.0428014 |                   0.0574666 |
-| FP16      |                   0.09992  |                        0.0325476 |                          0.0189993 |                   0.0345011 |
-| FP32      |                   0.120872 |                        0.0539329 |                          0.0225747 |                   0.0536712 |
+| FP16-INT8 |                  0.163184  |                        0.0426611 |                          0.0322367 |                   0.0559016 |
+| FP16      |                  0.1232    |                        0.0338423 |                          0.0189576 |                   0.0412244 |
+| FP32      |                  0.0888308 |                        0.0323096 |                          0.0187707 |                   0.0391196 |
 
 ### Perf./inference time
 
 For each of the models, we report the average over inference time overall demo video frames.
 
-|           |   face-detection-adas-0001 |   head-pose-estimation-adas-0001 |   landmarks-regression-retail-0009 |
-|:----------|---------------------------:|---------------------------------:|-----------------------------------:|
-| FP16-INT8 |                  0.0084396 |                      0.000811234 |                        0.000348047 |
-| FP16      |                  0.0115026 |                      0.000994762 |                        0.000351727 |
-| FP32      |                  0.0106671 |                      0.00104288  |                        0.000367753 |
+
+|           |   face-detection-adas-0001 |   head-pose-estimation-adas-0001 |   landmarks-regression-retail-0009 |   gaze-estimation-adas-0002 |
+|:----------|---------------------------:|---------------------------------:|-----------------------------------:|----------------------------:|
+| FP16-INT8 |                  0.0079483 |                      0.000747055 |                        0.000336387 |                 0.000706338 |
+| FP16      |                  0.0104724 |                      0.000996869 |                        0.000415242 |                 0.00107239  |
+| FP32      |                  0.0108567 |                      0.0010213   |                        0.000357545 |                 0.00105316  |
 
 ## Results
 
-We remark a quasi-consistent increase in time perf. (a lower inference time) going from FP32 to FP16 to FP16-INT8 (INT8 quantized). While for the loading we remark that the quantized model takes the longest time.
+We remark a quasi-consistent decrease in inference time (faster inference), going from FP32 to FP16 to FP16-INT8 (INT8 quantized). While for the loading we remark that the quantized model takes the longest time.
 
 
 ## Multiple face detection
