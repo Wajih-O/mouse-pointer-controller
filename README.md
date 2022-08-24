@@ -108,7 +108,7 @@ mouse_controller.py start --model_precision="FP16-INT8"
 A video capture of the controller in action is also attached in the output directory: `./output/screen_capture.mp4`
 
 <div>
-<video controls width="500" src="./output/screen_capture_h265.mp4"  muted="true">
+<video controls width="500" src="./output/screen_capture_h264.mp4"  muted="true">
 </video>
 </div>
 
